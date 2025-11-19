@@ -1,0 +1,6 @@
+[webservers]
+192.168.51.4 ansible_user=chloe
+192.168.51.5 ansible_user=chloe
+
+[centos]
+192.168.51.6 ansible_user=chloemargarette

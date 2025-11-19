@@ -1,0 +1,84 @@
+---
+- name: Install Enterprise Service and Monitoring Tool
+  hosts: all
+  become: true
+  vars_files:
+    - config.yaml
+
+  tasks:
+    - name: Install Apache (Debian/Ubuntu)
+      apt:
+        name: apache2
+        state: present
+      when: ansible_distribution == "Debian"
+      tags:
+        - apache
+      become: true
+
+    - name: Install Apache (centos)
+      dnf:
+        name: httpd
+        state: present
+      when: ansible_distribution == "centos"
+      tags:
+        - apache
+      become: true
+
+    - name: Add Grafana GPG Key (Debian/Ubuntu)
+      apt_key:
+        url: https://packages.grafana.com/gpg.key
+        state: present
+      when: ansible_distribution == "Debian"
+      tags:
+        - monitoring
+
+    - name: Download Grafana repo file
+      get_url:
+       url: https://packages.grafana.com/oss/deb/grafana.list
+       dest: /etc/apt/sources.list.d/grafana.list
+      when: ansible_distribution == "Debian"
+      tags:
+        - monitoring
+
+    - name: Install Grafana (Debian/Ubuntu)
+      apt:
+        name: grafana
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Debian"
+      tags:
+        - monitoring
+
+    - name: Download Grafana repo file for CentOS
+      get_url:
+        url: https://packages.grafana.com/oss/rpm/grafana.repo
+        dest: /etc/yum.repos.d/grafana.repo
+      when: ansible_distribution == "centos"
+      tags:
+        - monitoring
+
+    - name: Install Grafana (CentOS)
+      yum:
+        name: grafana
+        state: present
+      when: ansible_distribution == "centos"
+      tags:
+        - monitoring
+
+    - name: Start Grafana
+      systemd:
+        name: grafana-server
+        state: started
+        enabled: yes
+      tags:
+        - monitoring
+
+
+    - name: Update MOTD
+      lineinfile:
+        path: /etc/motd
+        line: "Ansible Managed by {{ motd_user }}"
+        create: yes
+      become: true
+      tags:
+        - motd
